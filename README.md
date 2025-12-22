@@ -10,7 +10,7 @@ Recientemente he estado estudiando LaTex de manera autodidacta y me propuse crea
 * **Secciones:**
   
  <p align="center">
-  <img src="https://github.com/user-attachments/assets/bdb4e4a2-9f8e-499f-9fa5-58626000125a" alt="Portada del Reporte" width="70%">
+  <img src="https://github.com/user-attachments/assets/68946cb9-a849-476a-81c8-08791f668ada" alt="Portada del Reporte" width="70%">
 </p>
   <p align="center">
   <img src="https://github.com/user-attachments/assets/1ab757d5-937a-472e-a754-f6560c3d1f93" alt="Índice del Reporte" width="70%">
