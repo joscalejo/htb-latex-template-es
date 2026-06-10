@@ -32,7 +32,7 @@ Para compilar esta plantilla necesitas una distribución de LaTeX instalada:
 
 1.  **Clonar el repositorio:**
     ```bash
-    git clone https://github.com/joscalejo/htb-latex-report.git
+    git clone https://github.com/joscalejo/htb-latex-report-es.git
     ```
 2.  **Configurar Variables:**
     Abre el archivo `plantilla.tex` y edita el bloque de variables al inicio:
