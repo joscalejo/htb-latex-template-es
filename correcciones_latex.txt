@@ -1,0 +1,86 @@
+===============================================================================
+REPORTE DE CORRECCIONES Y DEPURACIÓN - PLANTILLA LATEX (plantilla.tex)
+Proyecto: Reporte de Auditoría de Seguridad - Rock Hunters Store
+Fecha: 2026-08-26
+===============================================================================
+
+1. DIAGNÓSTICO DEL PROBLEMA
+-------------------------------------------------------------------------------
+Al compilar con LaTeX Workshop / pdflatex / latexmk, el proceso fallaba con
+el siguiente error crítico repetido en múltiples líneas:
+
+    LaTeX Error: File '' not found.
+    ! Emergency stop.
+    ! ==> Fatal error occurred, no output PDF file produced!
+
+Este error se manifestaba en saltos de página (\clearpage, \end{table}, 
+\end{document}) y en la portada (líneas 194 y 196).
+
+
+2. CAUSAS RAÍZ IDENTIFICADAS
+-------------------------------------------------------------------------------
+a) Macros de imágenes vacías:
+   Las variables estaban definidas sin ruta de archivo:
+       \newcommand{\logoHtb}{}
+       \newcommand{\empresaLogo}{}
+       \newcommand{\logoMaquina}{}
+
+b) Inclusión no condicionada en encabezados (fancyhdr):
+   La configuración del encabezado incluía:
+       \lhead{\includegraphics[width=1cm]{\empresaLogo}}
+   
+   Como los encabezados se ejecutan de manera diferida en CADA salto de 
+   página (\clearpage, cierre de tablas flotantes, final del documento), 
+   LaTeX intentaba abrir un archivo con nombre vacío ("") en cada página,
+   provocando la detención de emergencia (Emergency stop).
+
+c) Inclusión no condicionada en la portada:
+   En la cabecera de la carátula se ejecutaba directamente:
+       \includegraphics[height=1.2cm, keepaspectratio]{\logoHtb}
+       \includegraphics[height=1.2cm, keepaspectratio]{\empresaLogo}
+
+d) Operación aritmética inválida en dibujo de línea (Overfull \hbox de 130pt):
+   En la carátula existía la siguiente instrucción:
+       \rule{\textwidth-3.5cm}{0.8pt}
+   En LaTeX / TeX nativo, no se pueden restar longitudes directamente sin 
+   utilizar el comando de evaluación de dimensiones (\dimexpr).
+
+
+3. MODIFICACIONES Y SOLUCIONES APLICADAS
+-------------------------------------------------------------------------------
+1. Renderizado condicional en el encabezado (\lhead):
+   Se envolvió la llamada en una comprobación de macro vacía (\ifx):
+   
+   [Antes]
+       \lhead{\includegraphics[width=1cm]{\empresaLogo}}
+
+   [Después]
+       \lhead{\ifx\empresaLogo\empty\else\includegraphics[width=1cm]{\empresaLogo}\fi}
+
+2. Renderizado condicional en la portada (Titlepage):
+   Se condicionó la carga de los logos para que no generen error si las variables
+   están vacías, y se ajustó el espaciado horizontal automático entre ellos:
+
+   [Después]
+       \ifx\logoHtb\empty\else\includegraphics[height=1.2cm, keepaspectratio]{\logoHtb}\fi
+       \ifx\logoHtb\empty\else\ifx\empresaLogo\empty\else\hspace{0.3cm}\fi\fi
+       \ifx\empresaLogo\empty\else\includegraphics[height=1.2cm, keepaspectratio]{\empresaLogo}\fi
+
+3. Corrección de la longitud de la regla decorativa:
+   Se incorporó \dimexpr para calcular correctamente el ancho restante:
+
+   [Antes]
+       {\color{accentCyan}\rule{3.5cm}{2pt}}{\color{borderDark}\rule{\textwidth-3.5cm}{0.8pt}}
+
+   [Después]
+       {\color{accentCyan}\rule{3.5cm}{2pt}}{\color{borderDark}\rule{\dimexpr\textwidth-3.5cm\relax}{0.8pt}}
+
+
+4. RESULTADO
+-------------------------------------------------------------------------------
+- El documento compila de forma limpia (código de salida 0).
+- Permite dejar las rutas de logos vacías ("") sin romper la compilación.
+- Al asignar una ruta válida (ej. images/logo.png), los logos se mostrarán 
+  automáticamente en la portada y encabezado.
+- Se resuelven correctamente el índice (\tableofcontents), LastPage y los enlaces.
+===============================================================================
